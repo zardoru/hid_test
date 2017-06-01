@@ -31,7 +31,7 @@ extern "C" int Menu_Main(void)
 
     log_init("192.168.0.181");
 
-    log_printf("HID-TEST by Maschell. Building time: %s %s\n\n",__DATE__,__TIME__);
+    log_printf("HID-TEST by Maschell Biroro edition. Building time: %s %s\n\n",__DATE__,__TIME__);
 
     hid_init();
 
@@ -41,6 +41,13 @@ extern "C" int Menu_Main(void)
     log_deinit();
     return EXIT_SUCCESS;
 }
+
+#define PrintRow(row, buffer) PRINT_TEXT2(0, row, "     %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", \
+                buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], \
+                buffer[5], buffer[6], buffer[7], buffer[8], buffer[9], \
+                buffer[10], buffer[11], buffer[12], buffer[13], buffer[14], buffer[15])
+
+
 #define SWAP16(x) ((x>>8) | ((x&0xFF)<<8))
 #define SWAP8(x) ((x>>4) | ((x&0xF)<<4))
 void DisplayScreen(){
@@ -66,6 +73,15 @@ void DisplayScreen(){
 
     char* msg = (char*) malloc(80);
 
+    for (int j = 0; j < 4; j++) {
+        unsigned char* bmax = hid_callback_data[j].bufmax;
+        unsigned char* bmin = hid_callback_data[j].bufmin;
+        for (int i = 0; i < 16; i++) {
+            bmax[i] = 0;
+            bmin[i] = 0xFF;
+        }
+    }
+
     VPADData vpad_data;
     s32 error;
     do{
@@ -78,28 +94,31 @@ void DisplayScreen(){
         // Read vpad
         VPADRead(0, &vpad_data, 1, &error);
         int i = 0;
-        PRINT_TEXT2(0, i, "HID-TEST - by Maschell - %s %s",__DATE__,__TIME__); i++;  i++;
-        if(hid_callback_data != NULL){
-            unsigned char * buffer = hid_callback_data->buf;
-            if(buffer != NULL){
-                HIDDevice * p_device = hid_callback_data->device;
+        PRINT_TEXT2(0, i, "HID-TEST - by Maschell - %s %s biroro edition",__DATE__,__TIME__); i++;  i++;
 
-                PRINT_TEXT2(0, i, "vid              %04x\n", SWAP16(p_device->vid)); i++;
-                PRINT_TEXT2(0, i, "pid              %04x\n", SWAP16(p_device->pid)); i++;
-                PRINT_TEXT2(0, i, "interface index  %02x\n", p_device->interface_index);i++;
-                PRINT_TEXT2(0, i, "sub class        %02x\n", p_device->sub_class);i++;
-                PRINT_TEXT2(0, i, "protocol         %02x\n", p_device->protocol);i++;
-                PRINT_TEXT2(0, i, "max packet in    %02x\n", p_device->max_packet_size_rx);i++;
-                PRINT_TEXT2(0, i, "max packet out   %02x\n", p_device->max_packet_size_tx);i++;
+        if(hid_callback_data[0].device != NULL){
+            HIDDevice * p_device = hid_callback_data[0].device;
 
-                PRINT_TEXT2(0, i, "bytes transfered: %d", hid_callback_data->transfersize); i++;
-                i++;
-                PRINT_TEXT1(0, i, "Pos: 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"); i++;
-                PRINT_TEXT1(0, i, "----------------------------------------------------"); i++;
-                PRINT_TEXT2(0, i, "     %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7], buffer[8], buffer[9], buffer[10], buffer[11], buffer[12], buffer[13], buffer[14], buffer[15]); i++;
-
-            }
+            PRINT_TEXT2(0, i, "vid mando 0      %04x\n", SWAP16(p_device->vid)); i++;
+            PRINT_TEXT2(0, i, "pid mando 0      %04x\n", SWAP16(p_device->pid)); i++;
+            
+            i++;
+            PRINT_TEXT1(0, i, "Pos: 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"); i++;
         }
+
+        for (int k = 0; k < 4; k++) {
+            PrintRow(i + 0 + k * 3, hid_callback_data[0].buf);
+            for (int v = 0; v < 16; v++) {
+                if (hid_callback_data[0].bufmax[v] < hid_callback_data[0].buf[v])
+                    hid_callback_data[0].bufmax[v] = hid_callback_data[0].buf[v];
+                if (hid_callback_data[0].bufmin[v] > hid_callback_data[0].buf[v])
+                    hid_callback_data[0].bufmin[v] = hid_callback_data[0].buf[v];
+            }
+
+            PrintRow(i + 1 + k * 3, hid_callback_data[0].bufmax);
+            PrintRow(i + 2 + k * 3, hid_callback_data[0].bufmin);
+        }
+
         PRINT_TEXT1(0, 17, "Press HOME to return to the Homebrew Launcher");
         if(vpad_data.btns_h & VPAD_BUTTON_HOME){
             break;

@@ -20,4 +20,4 @@
 #include "retain_vars.h"
 
 HIDClient gHIDClient __attribute__((section(".data")));
-my_cb_user * hid_callback_data __attribute__((section(".data"))) = NULL;
+my_cb_user hid_callback_data[4] __attribute__((section(".data"))) = {0};

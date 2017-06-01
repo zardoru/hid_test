@@ -21,5 +21,5 @@
 #include "utils/hid.h"
 
 extern HIDClient gHIDClient;
-extern my_cb_user * hid_callback_data;
+extern my_cb_user hid_callback_data[4];
 #endif // RETAINS_VARS_H_

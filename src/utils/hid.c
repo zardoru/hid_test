@@ -53,7 +53,7 @@ s32 my_attach_cb(HIDClient *p_client, HIDDevice *p_device, u32 attach){
 
         unsigned char *buf = memalign(64,bufSize);
         memset(buf,0,bufSize);
-        my_cb_user *usr = memalign(64,sizeof(my_cb_user));
+        _bptr_my_cb_user *usr = memalign(64,sizeof(_bptr_my_cb_user));
 
         usr->buf = buf;
         usr->device = p_device;
@@ -69,7 +69,8 @@ s32 my_attach_cb(HIDClient *p_client, HIDDevice *p_device, u32 attach){
 
         return HID_DEVICE_ATTACH;
     }else{
-        my_cb_user * user_data = NULL;
+        // wtf this is never not null?
+        /*my_cb_user * user_data = NULL;
 
         if(user_data){
             if(user_data->buf){
@@ -78,7 +79,7 @@ s32 my_attach_cb(HIDClient *p_client, HIDDevice *p_device, u32 attach){
             }
             free(user_data);
             user_data = NULL;
-        }
+        }*/
     }
 	return HID_DEVICE_DETACH;
 }
@@ -87,10 +88,11 @@ void my_read_cb(u32 handle,s32 error,u8 *p_buffer,u32 bytes_transfered,void *p_u
 {
 	if(error == 0 && p_user != NULL )
 	{
-		my_cb_user *usr = (my_cb_user*)p_user;
-		hid_callback_data = usr;
+		_bptr_my_cb_user *usr = (_bptr_my_cb_user*)p_user;
+		// hid_callback_data = usr;
 		unsigned char*  buffer = usr->buf;
 		if(buffer != NULL){
+            memcpy(&hid_callback_data[buffer[0] - 1].buf, buffer, 16);
             log_printf("data: %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n", buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7], buffer[8], buffer[9], buffer[10], buffer[11], buffer[12], buffer[13], buffer[14], buffer[15]);
 		}
         HIDRead(handle, usr->buf, bytes_transfered, my_read_cb, usr);

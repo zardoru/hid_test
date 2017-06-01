@@ -29,11 +29,20 @@ extern "C" {
 #include "dynamic_libs/vpad_functions.h"
 
 typedef struct _my_cb_user{
-	unsigned char *buf;
+	unsigned char buf[16];
+	unsigned char bufmax[16];
+	unsigned char bufmin[16];
 	unsigned int transfersize;
     unsigned int handle;
 	HIDDevice * device;
 }my_cb_user;
+
+typedef struct _bptr_my_cb_user{
+	unsigned char *buf;
+	unsigned int transfersize;
+    unsigned int handle;
+	HIDDevice * device;
+} _bptr_my_cb_user;
 
 void hid_init();
 
